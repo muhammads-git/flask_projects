@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Greet App</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='handshake.ico') }}" >
+</head>
+<body>
+    <h1><b>Flask App</b></h1>
+
+    <form method="POST">
+        <input type="text" name="username" placeholder="Enter your name" required>
+        <button type="submit">Greet</button>
+    </form>
+    {% if name %}
+        <h2><b>HELLO</b>, {{ name }}!</h2>
+    {% endif %}
+
+    <script>src='static/script.js'</script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<html>
+
+<head>
+    <title> First APP</title>
+    <link rel='shortcut icon' href="{{url_for('static', filename='handshake.ico') }}">
+</head>
+
+<body>
+    <h1><b><i>Trainer Details</i></b></h1>
+
+    <form method="post" action="{{url_for('trainer_create')}}"  name= "trainer_form">
+        <table>
+            <tr>
+                <td>First Name</td>
+                <td> <input type='text' name="fname"> </td>
+            </tr>
+            <tr>
+                <td>Last Name</td>
+                <td> <input type='text' name="lname"> </td>
+            </tr>
+              <tr>
+                <td>Email</td>
+                <td> <input type= 'text' name='email'> </td>
+            </tr>
+            
+               <tr>
+                <td>Design</td>
+                <td> <input type='text' name="design"> </td>
+            </tr>
+               <tr>
+                <td>Course</td>
+                <td> <input type='text' name="course"> </td>
+            </tr>
+            <tr>
+                <td><input type="Submit" value="Submit"></td>
+            </tr>
+
+        </table>
+    </form>
+
+</body>
+
+</html>
