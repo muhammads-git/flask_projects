@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Todo List</title>
+</head>
+<body>
+    <form method='GET' action="{{ url_for('display_all') }}">
+        <center>
+            <table border="5">
+                <tr>
+                    <th colspan="10">TODO DATA</th>
+                </tr>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Is_Done</th>
+                </tr>
+
+                {% for i in mydata %}
+                <tr>
+                    <td>{{ i[0] }}</td>
+                    <td>{{ i[1] }}</td>
+                    <td>{{ i[2] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </center>
+    </form>
+</body>
+</html>

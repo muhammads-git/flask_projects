@@ -16,19 +16,25 @@
     <!-- ✅ LOOP THROUGH EXISTING TASKS -->
     <h2>Tasks:</h2>
     {% for title in titles %}
-        <p>{{ title[1]}}</p>
-
+        <p>
+        {{ title[1] }} — 
+        {% if title[2] == 1 %}
+            ✅ Done
+        {% else %}
+            ⏳ Pending
+        {% endif %}
+        </p>
         <form method="POST" action="{{ url_for('task_to_remove') }}">
-            <input type="text" name="remove_title" value="{{ title[1] }}">
+            <input type="hidden" name="remove_title" value="{{ title[1] }}">
             <button type="submit">Remove</button>
         </form>
 
         <form method="POST" action="{{url_for('mark_as_done')}}">   
-            <input type = 'text' name="task_done">
-            <button type = 'submit' >Mark as done</button>
+            <input type = 'hidden' name="task_done" value="{{title[0]}}">
+            <button type ='submit' >Mark as done</button>
         </form>
         <br>
     {% endfor %}
-        </center>
+    </center>
 </body>
 </html>

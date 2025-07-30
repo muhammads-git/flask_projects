@@ -1,4 +1,4 @@
-from flask import Flask , render_template, url_for,request
+from flask import Flask , render_template, url_for,request,redirect
 from flask_mysqldb import MySQL
 
 # create app object
@@ -44,7 +44,7 @@ def task_to_add():
     # close cursor
     cursor.close()
 
-    return render_template('finalpage.html')
+    return redirect(url_for('display_all'))
 
 # remove tasks 
 @app.route('/remove_task', methods = ['POST','GET'])
@@ -61,23 +61,33 @@ def task_to_remove():
     # close 
     cursor.close()
     
-    return 'Task has been successfully removed from TODO list'
+    return redirect(url_for('display_all'))
 
 # task has been done
-@app.route('/mark', methods=['POST'])
+@app.route('/mark_as_done', methods=['POST'])
 def mark_as_done():
-    task_done = request.form['task_done']
-
+    task_id = request.form['task_done']
+    print("Task to mark as done: ",task_id)
     # make connection with mysql
     cursor = mysql.connection.cursor()
-    cursor.execute('UPDATE add_task SET is_done = 1 WHERE title = %s', (task_done,))
+    cursor.execute('UPDATE add_task SET is_done = 1 WHERE id = %s', (task_id,))
 
     mysql.connection.commit()
 
     cursor.close()
 
-    return 'Task done!'
+    return redirect(url_for('display_all'))
 
+
+@app.route('/display_all', methods=['GET'])
+def display_all():
+    cursor = mysql.connection.cursor()
+    cursor.execute('SELECT * FROM add_task')
+    all_data= cursor.fetchall()
+    mysql.connection.commit()
+
+    cursor.close()
+    return render_template('diplay_data.html',mydata=all_data)
 
 if __name__ == '__main__':
     app.run(debug=True)
