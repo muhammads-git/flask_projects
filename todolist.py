@@ -39,6 +39,8 @@ def register():
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
+    error = None   # flag to send to template
+
     if request.method == 'POST':
         username = request.form['Username']
         password = request.form['Password']
@@ -54,10 +56,9 @@ def login():
                 session['username'] = username
                 return redirect(url_for('display_all'))
             else:
-                print("Password incorrect")
+                error = "Password in incorrect"
         else:
-            print("Username not found")
-
+            error = "Username not found, please register."
     return render_template('login.html')
 
 # Logout
