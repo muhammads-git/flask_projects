@@ -59,7 +59,7 @@ def login():
                 error = "Password in incorrect"
         else:
             error = "Username not found, please register."
-    return render_template('login.html')
+    return render_template('login.html', error=error)
 
 # Logout
 @app.route('/logout')
