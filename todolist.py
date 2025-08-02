@@ -60,8 +60,16 @@ def login():
 
     return render_template('login.html')
 
+# Logout
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    return redirect(url_for('login'))    # redirect to login
+
+
 @app.route('/display_all', methods=['GET'])
 def display_all():
+    # if the user didnt login dont show this route
     if 'username' not in session:
         return redirect(url_for('login'))
 
