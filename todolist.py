@@ -1,93 +1,117 @@
-from flask import Flask , render_template, url_for,request,redirect
+from flask import Flask, render_template, url_for, request, redirect, session
 from flask_mysqldb import MySQL
+from flask_bcrypt import Bcrypt
 
 # create app object
 app = Flask(__name__)
-# configure flask to databses
+# configure flask to database
 app.config['MYSQL_HOST'] = '127.0.0.1'
-app.config['MYSQL_USER'] ='muhammad'
+app.config['MYSQL_USER'] = 'muhammad'
 app.config['MYSQL_PASSWORD'] = '034971'
 app.config['MYSQL_DB'] = 'todo'
 mysql = MySQL(app)
+bcrypt = Bcrypt(app)
 
-# first page
+# secret key for session
+app.secret_key = 'abc123cba321'
+
+# ---------------- ROUTES ----------------
+
 @app.route('/')
-def page():
-    cursor = mysql.connection.cursor()
-    cursor.execute(
-        'SELECT * FROM add_task'
-    )
-    titles = cursor.fetchall()
-    cursor.close()
+def home():
+    return render_template('register.html')
 
-    return render_template('add_task.html',titles = titles)
-
-
-#todo
-@app.route('/enter_task',methods = ['POST','GET'])
-def task_to_add():
+@app.route('/register', methods=['POST', 'GET'])
+def register():
     if request.method == 'POST':
-        new_task= request.form['title']
-    
-    # sql 
-    sql = 'INSERT INTO add_task (title) VALUES (%s)'
-    val = (new_task,)
+        username = request.form['Username']
+        password = request.form['Password']
+        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
-    #make connection
-    cursor = mysql.connection.cursor()
-    # insert
-    cursor.execute(sql,val)
+        cursor = mysql.connection.cursor()
+        cursor.execute('INSERT INTO users (username, password) VALUES (%s, %s)', (username, hashed_password))
+        mysql.connection.commit()
+        cursor.close()
 
-    # commit data
-    mysql.connection.commit()
+        return redirect(url_for('login'))
 
-    # close cursor
-    cursor.close()
+    return render_template('register.html')
 
-    return redirect(url_for('display_all'))
-
-# remove tasks 
-@app.route('/remove_task', methods = ['POST','GET'])
-def task_to_remove():
+@app.route('/login', methods=['POST', 'GET'])
+def login():
     if request.method == 'POST':
-        remove_title = request.form['remove_title']
+        username = request.form['Username']
+        password = request.form['Password']
 
-    # connection
-    cursor = mysql.connection.cursor()
-    # execute the values
-    cursor.execute('DELETE FROM add_task WHERE title = %s', (remove_title,))
-    # commit changes
-    mysql.connection.commit()
-    # close 
-    cursor.close()
-    
-    return redirect(url_for('display_all'))
+        cursor = mysql.connection.cursor()
+        cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
+        user = cursor.fetchone()
+        cursor.close()
 
-# task has been done
-@app.route('/mark_as_done', methods=['POST'])
-def mark_as_done():
-    task_id = request.form['task_done']
-    print("Task to mark as done: ",task_id)
-    # make connection with mysql
-    cursor = mysql.connection.cursor()
-    cursor.execute('UPDATE add_task SET is_done = 1 WHERE id = %s', (task_id,))
+        if user:
+            stored_hash = user[2]
+            if bcrypt.check_password_hash(stored_hash, password):
+                session['username'] = username
+                return redirect(url_for('display_all'))
+            else:
+                print("Password incorrect")
+        else:
+            print("Username not found")
 
-    mysql.connection.commit()
-
-    cursor.close()
-
-    return redirect(url_for('display_all'))
-
+    return render_template('login.html')
 
 @app.route('/display_all', methods=['GET'])
 def display_all():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
     cursor = mysql.connection.cursor()
     cursor.execute('SELECT * FROM add_task')
-    all_data= cursor.fetchall()
-    mysql.connection.commit()
-
+    all_data = cursor.fetchall()
     cursor.close()
-    return render_template('diplay_data.html',mydata=all_data)
+
+    return render_template('diplay_data.html', mydata=all_data)
+
+@app.route('/task_to_add', methods=['POST'])
+def task_to_add():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    new_task = request.form['title']
+    cursor = mysql.connection.cursor()
+    cursor.execute('INSERT INTO add_task (title) VALUES (%s)', (new_task,))
+    mysql.connection.commit()
+    cursor.close()
+
+    return redirect(url_for('display_all'))
+
+@app.route('/remove_task', methods=['POST'])
+def task_to_remove():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    remove_title = request.form['remove_title']
+    cursor = mysql.connection.cursor()
+    cursor.execute('DELETE FROM add_task WHERE title = %s', (remove_title,))
+    mysql.connection.commit()
+    cursor.close()
+
+    return redirect(url_for('display_all'))
+
+@app.route('/mark_as_done', methods=['POST'])
+def mark_as_done():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    task_id = request.form['task_done']
+    cursor = mysql.connection.cursor()
+    cursor.execute('UPDATE add_task SET is_done = 1 WHERE id = %s', (task_id,))
+    mysql.connection.commit()
+    cursor.close()
+
+    return redirect(url_for('display_all'))
+
+# ---------------- RUN ----------------
 
 if __name__ == '__main__':
     app.run(debug=True)
