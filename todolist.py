@@ -49,7 +49,7 @@ def login():
         cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
         user = cursor.fetchone()
         cursor.close()
-
+        
         if user:
             stored_hash = user[2]
             if bcrypt.check_password_hash(stored_hash, password):
@@ -64,9 +64,12 @@ def login():
 # Logout
 @app.route('/logout')
 def logout():
-    session.pop('username', None)
-    return redirect(url_for('login'))    # redirect to login
-
+    error = None
+    # session.pop('username', None)
+    session.clear()
+    error = "You are logged out."
+    # return redirect(url_for('login'),error=error)    # redirect to login
+    return render_template('login.html', error= error)
 
 @app.route('/display_all', methods=['GET'])
 def display_all():

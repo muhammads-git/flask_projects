@@ -20,6 +20,12 @@
         <button type="submit">Login</button>
     </form>
 
+    {% if error %}
+        <script>
+            alert("{{ error }}");
+        </script>
+    {% endif %}
+
     <form method="get" action="{{ url_for('logout') }}">
         <input type="hidden" name="logout">
         <button type="submit">Logout</button>
