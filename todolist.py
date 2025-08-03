@@ -23,16 +23,28 @@ def home():
 
 @app.route('/register', methods=['POST', 'GET'])
 def register():
+    error = None
+
     if request.method == 'POST':
-        username = request.form['Username']
-        password = request.form['Password']
+        username = request.form['Username'].strip()
+        password = request.form['Password'].strip()
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
+        # handle empty username or password
+        if username == '' or password == '':
+            error = "Fields cannot be empty."
+
+            return render_template('register.html', error=error)
+        
+
+        # else 
+        # send data to database
         cursor = mysql.connection.cursor()
         cursor.execute('INSERT INTO users (username, password) VALUES (%s, %s)', (username, hashed_password))
         mysql.connection.commit()
         cursor.close()
 
+           
         return redirect(url_for('login'))
 
     return render_template('register.html')
@@ -42,9 +54,18 @@ def login():
     error = None   # flag to send to template
 
     if request.method == 'POST':
-        username = request.form['Username']
-        password = request.form['Password']
+        username = request.form['Username'].strip()
+        password = request.form['Password'].strip()
 
+        # if empty username or password
+        if username == '' or password == '':
+            error = "Fill in the fields."
+
+
+            return render_template('login.html', error= error)
+            
+        # else
+        # send the data to database
         cursor = mysql.connection.cursor()
         cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
         user = cursor.fetchone()
@@ -59,7 +80,7 @@ def login():
                 error = "Password in incorrect"
         else:
             error = "Username not found, please register."
-    return render_template('login.html', error=error)
+    return render_template('login.html', message=error)
 
 # Logout
 @app.route('/logout')
