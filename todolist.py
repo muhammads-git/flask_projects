@@ -107,10 +107,18 @@ def display_all():
 
 @app.route('/task_to_add', methods=['POST'])
 def task_to_add():
+    error = None
+
     if 'username' not in session:
         return redirect(url_for('login'))
 
-    new_task = request.form['title']
+    new_task = request.form['title'].strip()
+    # handle if task is empty
+    if new_task == '':
+        error = "Please write the task name"
+        return render_template('diplay_data.html',error = error)
+    
+    #else store task in database
     cursor = mysql.connection.cursor()
     cursor.execute('INSERT INTO add_task (title) VALUES (%s)', (new_task,))
     mysql.connection.commit()
