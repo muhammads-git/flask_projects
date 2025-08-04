@@ -1,4 +1,5 @@
 from flask import Flask, render_template, url_for, request, redirect, session
+from flask import flash,get_flashed_messages
 from flask_mysqldb import MySQL
 from flask_bcrypt import Bcrypt
 
@@ -57,15 +58,17 @@ def login():
         username = request.form['Username'].strip()
         password = request.form['Password'].strip()
 
-        # if empty username or password
-        if username == '' or password == '':
-            error = "Fill in the fields."
+        if username != 'Muhammad Hammad official':
+            flash("You dont seem to be ADMIN","danger") # danger is the category
+            return redirect(url_for('login'))
+
+        # # if empty username or password
+        # if username == '' or password == '':
+        #     error = "Fill in the fields."
 
 
-            return render_template('login.html', error= error)
+        #     return render_template('login.html', error= error)
             
-        # else
-        # send the data to database
         cursor = mysql.connection.cursor()
         cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
         user = cursor.fetchone()
@@ -134,6 +137,7 @@ def task_to_remove():
     remove_title = request.form['remove_title']
     cursor = mysql.connection.cursor()
     cursor.execute('DELETE FROM add_task WHERE title = %s', (remove_title,))
+    
     mysql.connection.commit()
     cursor.close()
 
