@@ -3,13 +3,16 @@ from flask import flash,get_flashed_messages
 from flask_mysqldb import MySQL
 from flask_bcrypt import Bcrypt
 
+
+
 # create app object
 app = Flask(__name__)
 # configure flask to database
-app.config['MYSQL_HOST'] = '127.0.0.1'
-app.config['MYSQL_USER'] = 'muhammad'
-app.config['MYSQL_PASSWORD'] = '034971'
-app.config['MYSQL_DB'] = 'todo'
+app.config['MySQL_HOST']='127.0.0.1'
+app.config['MYSQL_USER']='muhammad'
+app.config['MYSQL_PASSWORD']='034971'
+app.config['MYSQL_DB']='todo'
+
 mysql = MySQL(app)
 bcrypt = Bcrypt(app)
 
@@ -58,16 +61,12 @@ def login():
         username = request.form['Username'].strip()
         password = request.form['Password'].strip()
 
-        if username != 'Muhammad Hammad official':
-            flash("You dont seem to be ADMIN","danger") # danger is the category
-            return redirect(url_for('login'))
-
-        # # if empty username or password
-        # if username == '' or password == '':
-        #     error = "Fill in the fields."
+        # if empty username or password
+        if username == '' or password == '':
+            error = "Fill in the fields."
 
 
-        #     return render_template('login.html', error= error)
+            return render_template('login.html', error= error)
             
         cursor = mysql.connection.cursor()
         cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
@@ -83,7 +82,7 @@ def login():
                 error = "Password in incorrect"
         else:
             error = "Username not found, please register."
-    return render_template('login.html', message=error)
+    return render_template('login.html')
 
 # Logout
 @app.route('/logout')
@@ -114,16 +113,19 @@ def task_to_add():
 
     if 'username' not in session:
         return redirect(url_for('login'))
-
+    # get task
     new_task = request.form['title'].strip()
+    # get due date from the form
+    due_date = request.form.get('due_date').strip()
+
     # handle if task is empty
-    if new_task == '':
-        error = "Please write the task name"
+    if new_task == '' or due_date == '':
+        error = "Please fill the fields."
         return render_template('diplay_data.html',error = error)
     
     #else store task in database
     cursor = mysql.connection.cursor()
-    cursor.execute('INSERT INTO add_task (title) VALUES (%s)', (new_task,))
+    cursor.execute('INSERT INTO add_task (title,due_date) VALUES (%s,%s)', (new_task,due_date))
     mysql.connection.commit()
     cursor.close()
 
@@ -159,4 +161,4 @@ def mark_as_done():
 # ---------------- RUN ----------------
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0",port=5000,debug=True)
