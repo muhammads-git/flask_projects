@@ -4,13 +4,12 @@ from flask_mysqldb import MySQL
 from flask_bcrypt import Bcrypt
 
 
-
 # create app object
 app = Flask(__name__)
 # configure flask to database
-app.config['MySQL_HOST']='127.0.0.1'
+app.config['MYSQL_HOST']='localhost'
 app.config['MYSQL_USER']='muhammad'
-app.config['MYSQL_PASSWORD']='034971'
+app.config['MYSQL_PASSWORD']='Shahzib123!'
 app.config['MYSQL_DB']='todo'
 
 mysql = MySQL(app)
@@ -23,6 +22,14 @@ app.secret_key = 'abc123cba321'
 
 @app.route('/')
 def home():
+    try:
+        if not request.status_code == 200:
+            print("Error!")
+        else:
+            print("WELCOME")
+    except Exception as e:
+        print(f"Error", e)
+
     return render_template('register.html')
 
 @app.route('/register', methods=['POST', 'GET'])
@@ -105,7 +112,7 @@ def display_all():
     all_data = cursor.fetchall()
     cursor.close()
 
-    return render_template('diplay_data.html', mydata=all_data)
+    return render_template('diplay_data.html', mydata=all_data,)
 
 @app.route('/task_to_add', methods=['POST'])
 def task_to_add():
@@ -158,6 +165,30 @@ def mark_as_done():
 
     return redirect(url_for('display_all'))
 
+
+# edit task
+@app.route('/edit/<int:id>',methods=['GET'])
+def edit(id):
+    cursor = mysql.connection.cursor()
+    cursor.execute('SELECT * FROM add_task WHERE id = %s ',(id,))
+    task = cursor.fetchone()
+    cursor.close()
+    return render_template('display_data.html',task=task)
+
+# update task
+@app.route('/update/<int:id>', methods=['POST'])
+def update(id):
+
+    title = request.form['title']
+    status = request.form['is_done']
+
+    cursor=mysql.connection.cursor()
+    cursor.execute('UPDATE add_task set title=%s, is_done=%s WHERE id=%s',(title,status,id))
+    mysql.connection.commit()
+    cursor.close()
+
+    return redirect(url_for('display_all'))
+    # return render_template("diplay_data.html",error=error)
 # ---------------- RUN ----------------
 
 if __name__ == '__main__':

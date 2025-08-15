@@ -37,11 +37,11 @@
         <tr>
             <th>ID</th>
             <th>Title</th>
-            <th>Status</th>
+            <th>Completion</th>
             <th>Due Dates</th>
         </tr>
         {% for task in mydata %}
-        <tr class="{{ 'done' if task[2] == 1 else '' }}">
+        <tr class="{{ 'done' if task[2] == 1 else 'pending' }}">
             <td>{{ task[0] }}</td>
             <td>{{ task[1] }}</td>
             <td>{{ 'Done' if task[2] == 1 else 'Pending' }}</td>
@@ -50,7 +50,6 @@
                 {% else %}
                     ∞ No deadline
                 {% endif %}
-
             </td>
             <td>
                 {% if task[2] == 0 %}
@@ -63,6 +62,23 @@
                     <input type="hidden" name="remove_title" value="{{ task[1] }}">
                     <button type="submit">Remove</button>
                 </form>
+
+
+                <form method='GET' action="{{url_for('edit', id=task[0]) }}">
+                    <input type="hidden" name="edit_task">
+                    <button type="submit">Edit</button>
+                </form>
+                {% if error %}
+                    <script>
+                        alert("{{error}}");
+                    </script>
+                {% endif %}
+                <form method='POST' action="{{url_for('update',id=task[0]) }}">
+                    <input type="text" name="title" value="{{ task[1] }}">
+                    <input type="text" name="is_done" value="{{task[2]}}">
+                    <button type="submit">Save</button>
+                </form>
+
             </td>
         </tr>
         {% endfor %}
