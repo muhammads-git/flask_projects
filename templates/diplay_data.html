@@ -5,7 +5,7 @@
     <style>
         .done {
             text-decoration: line-through;
-            color: gray;
+            color: rgb(196, 74, 58);
         }
         table, th, td {
             border: 1px solid black;
@@ -60,7 +60,7 @@
                 </form>
                 {% endif %}
                 <form method="POST" action="{{ url_for('task_to_remove') }}" class="inline">
-                    <input type="hidden" name="remove_title" value="{{ task[1] }}">
+                    <input type="hidden" name="remove_title" value="{{ task[0] }}">
                     <button type="submit">Remove</button>
                 </form>
 

@@ -75,7 +75,8 @@ def login():
         if user:
             stored_hash = user[2]
             if bcrypt.check_password_hash(stored_hash, password):
-                session['username'] = username
+                session['username'] = user[1]   # column 1 is username --> [id, username,password]
+                session['user_id'] = user[0]    # column 0 is id  -->  [id, username,password]
                 return redirect(url_for('display_all'))
             else:
                 error = "Password in incorrect"
@@ -100,7 +101,7 @@ def display_all():
         return redirect(url_for('login'))
 
     cursor = mysql.connection.cursor()
-    cursor.execute('SELECT * FROM add_task')
+    cursor.execute('SELECT * FROM add_task WHERE user_id = %s', (session['user_id'],))     ### 
     all_data = cursor.fetchall()
     cursor.close()
 
@@ -124,7 +125,7 @@ def task_to_add():
     
     #else store task in database
     cursor = mysql.connection.cursor()
-    cursor.execute('INSERT INTO add_task (title,due_date) VALUES (%s,%s)', (new_task,due_date))
+    cursor.execute('INSERT INTO add_task (title,due_date,user_id) VALUES (%s,%s,%s)', (new_task,due_date,session['user_id']))
     mysql.connection.commit()
     cursor.close()
 
@@ -137,7 +138,7 @@ def task_to_remove():
 
     remove_title = request.form['remove_title']
     cursor = mysql.connection.cursor()
-    cursor.execute('DELETE FROM add_task WHERE title = %s', (remove_title,))
+    cursor.execute('DELETE FROM add_task WHERE user_id =%s AND id = %s', (session['user_id'],remove_title))
     
     mysql.connection.commit()
     cursor.close()
@@ -151,7 +152,7 @@ def mark_as_done():
 
     task_id = request.form['task_done']
     cursor = mysql.connection.cursor()
-    cursor.execute('UPDATE add_task SET is_done = 1 WHERE id = %s', (task_id,))
+    cursor.execute('UPDATE add_task SET is_done = 1 WHERE id = %s AND user_id = %s', (task_id,session['user_id']))
     mysql.connection.commit()
     cursor.close()
 
@@ -162,7 +163,7 @@ def mark_as_done():
 @app.route('/edit/<int:id>', methods=["GET"])
 def edit(id):
     cursor=mysql.connection.cursor()
-    cursor.execute('SELECT * FROM add_task WHERE id = %s', (id,))
+    cursor.execute('SELECT * FROM add_task WHERE user_id = %s AND id = %s', (session['user_id'],id))
     task= cursor.fetchone()
     cursor.close()
     return render_template('diplay_data.html',task=task,id=id)
@@ -174,7 +175,7 @@ def update(id):
     due_date=request.form['due_date']
 
     cursor = mysql.connection.cursor()
-    cursor.execute('UPDATE add_task SET title=%s, due_date=%s WHERE id=%s',(title,due_date,id))
+    cursor.execute('UPDATE add_task SET title=%s, due_date=%s WHERE user_id= %s AND id=%s',(session['user_id'],title,due_date,id))
     mysql.connection.commit()
 
     cursor.close()
