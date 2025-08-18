@@ -22,14 +22,6 @@ app.secret_key = 'abc123cba321'
 
 @app.route('/')
 def home():
-    try:
-        if not request.status_code == 200:
-            print("Error!")
-        else:
-            print("WELCOME")
-    except Exception as e:
-        print(f"Error", e)
-
     return render_template('register.html')
 
 @app.route('/register', methods=['POST', 'GET'])
@@ -167,28 +159,27 @@ def mark_as_done():
 
 
 # edit task
-@app.route('/edit/<int:id>',methods=['GET'])
+@app.route('/edit/<int:id>', methods=["GET"])
 def edit(id):
-    cursor = mysql.connection.cursor()
-    cursor.execute('SELECT * FROM add_task WHERE id = %s ',(id,))
-    task = cursor.fetchone()
+    cursor=mysql.connection.cursor()
+    cursor.execute('SELECT * FROM add_task WHERE id = %s', (id,))
+    task= cursor.fetchone()
     cursor.close()
-    return render_template('display_data.html',task=task)
+    return render_template('diplay_data.html',task=task,id=id)
 
 # update task
 @app.route('/update/<int:id>', methods=['POST'])
 def update(id):
+    title= request.form['title']
+    due_date=request.form['due_date']
 
-    title = request.form['title']
-    status = request.form['is_done']
-
-    cursor=mysql.connection.cursor()
-    cursor.execute('UPDATE add_task set title=%s, is_done=%s WHERE id=%s',(title,status,id))
+    cursor = mysql.connection.cursor()
+    cursor.execute('UPDATE add_task SET title=%s, due_date=%s WHERE id=%s',(title,due_date,id))
     mysql.connection.commit()
-    cursor.close()
 
+    cursor.close()
+    
     return redirect(url_for('display_all'))
-    # return render_template("diplay_data.html",error=error)
 # ---------------- RUN ----------------
 
 if __name__ == '__main__':
