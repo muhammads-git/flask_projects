@@ -2,7 +2,9 @@ from flask import Flask, render_template, url_for, request, redirect, session
 from flask import flash,get_flashed_messages
 from flask_mysqldb import MySQL
 from flask_bcrypt import Bcrypt
-
+import secrets
+#import register form class from another page 
+from forms import RegisterForm
 
 # create app object
 app = Flask(__name__)
@@ -11,36 +13,28 @@ app.config['MYSQL_HOST']='localhost'
 app.config['MYSQL_USER']='muhammad'
 app.config['MYSQL_PASSWORD']='Shahzib123!'
 app.config['MYSQL_DB']='todo'
-
 mysql = MySQL(app)
 bcrypt = Bcrypt(app)
 
 # secret key for session
-app.secret_key = 'abc123cba321'
+app.secret_key = secrets.token_hex(16)
 
 # ---------------- ROUTES ----------------
 
 @app.route('/')
 def home():
-    return render_template('register.html')
+    form=RegisterForm()
+    return render_template('register.html', form=form)
 
 @app.route('/register', methods=['POST', 'GET'])
 def register():
-    error = None
+    form = RegisterForm()
 
-    if request.method == 'POST':
-        username = request.form['Username'].strip()
-        password = request.form['Password'].strip()
+    if form.validate_on_submit():
+        username = form.username.data.strip()
+        password = form.password.data.strip()
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
-        # handle empty username or password
-        if username == '' or password == '':
-            error = "Fields cannot be empty."
-
-            return render_template('register.html', error=error)
-        
-
-        # else 
         # send data to database
         cursor = mysql.connection.cursor()
         cursor.execute('INSERT INTO users (username, password) VALUES (%s, %s)', (username, hashed_password))
@@ -50,7 +44,7 @@ def register():
            
         return redirect(url_for('login'))
 
-    return render_template('register.html')
+    return render_template('register.html',form=form)
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
@@ -69,14 +63,14 @@ def login():
             
         cursor = mysql.connection.cursor()
         cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
-        user = cursor.fetchone()
+        user = cursor.fetchone()    # (user) is basically a tuple not a dict, it saves data like (1,'Muhammad Hammaed','1234hsdflj')
         cursor.close()
         
         if user:
             stored_hash = user[2]
             if bcrypt.check_password_hash(stored_hash, password):
                 session['username'] = user[1]   # column 1 is username --> [id, username,password]
-                session['user_id'] = user[0]    # column 0 is id  -->  [id, username,password]
+                session['user_id'] = user[0]   # column 0 is id  -->  [id, username,password]
                 return redirect(url_for('display_all'))
             else:
                 error = "Password in incorrect"
@@ -101,7 +95,7 @@ def display_all():
         return redirect(url_for('login'))
 
     cursor = mysql.connection.cursor()
-    cursor.execute('SELECT * FROM add_task WHERE user_id = %s', (session['user_id'],))     ### 
+    cursor.execute('SELECT * FROM add_task WHERE user_id = %s', (session['user_id'],))   
     all_data = cursor.fetchall()
     cursor.close()
 
