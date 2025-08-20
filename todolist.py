@@ -4,7 +4,7 @@ from flask_mysqldb import MySQL
 from flask_bcrypt import Bcrypt
 import secrets
 #import register form class from another page 
-from forms import RegisterForm
+from forms import RegisterForm,Loginform
 
 # create app object
 app = Flask(__name__)
@@ -48,19 +48,13 @@ def register():
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
-    error = None   # flag to send to template
+    form = Loginform()   # flag to send to template
 
-    if request.method == 'POST':
-        username = request.form['Username'].strip()
-        password = request.form['Password'].strip()
+    if form.validate_on_submit():
+        username = form.username.data.strip()    # .strip() to remove whitespaces
+        password = form.password.data.strip()
 
-        # if empty username or password
-        if username == '' or password == '':
-            error = "Fill in the fields."
-
-
-            return render_template('login.html', error= error)
-            
+         # store data               
         cursor = mysql.connection.cursor()
         cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
         user = cursor.fetchone()    # (user) is basically a tuple not a dict, it saves data like (1,'Muhammad Hammaed','1234hsdflj')
@@ -72,11 +66,8 @@ def login():
                 session['username'] = user[1]   # column 1 is username --> [id, username,password]
                 session['user_id'] = user[0]   # column 0 is id  -->  [id, username,password]
                 return redirect(url_for('display_all'))
-            else:
-                error = "Password in incorrect"
-        else:
-            error = "Username not found, please register."
-    return render_template('login.html')
+        
+    return render_template('login.html',form=form)
 
 # Logout
 @app.route('/logout')

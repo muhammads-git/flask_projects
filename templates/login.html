@@ -7,24 +7,30 @@
 <body>
 <center>
 
-    <!-- ✅ Show popup if error exists -->
-    {% if error %}
-        <script>
-            alert("{{ error }}");
-        </script>
-    {% endif %}
-
     <form method="POST" action="{{ url_for('login') }}">
-        <input type="text" name="Username" placeholder="Enter username" ><br>
-        <input type="text" name="Password" placeholder="Enter password" ><br>
-        <button type="submit">Login</button>
-    </form>
+    {{ form.hidden_tag() }}
+        <p>
+            {{ form.username.label }} <br>
+            {{ form.username(size=20, placeholder="Enter the username")}}
+            {% for error in form.username.errors %}
+                <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+        </p>
 
-    {% if error %}
-        <script>
-            alert("{{ error }}");
-        </script>
-    {% endif %}
+        <p>
+            {{ form.password.label }} <br>
+            {{form.password(size=20, placeholder="Enter the password")}}
+            {% for error in form.username.errors %}
+                <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+        </p>
+
+
+        <p>
+            {{ form.submit }}
+        </p>
+
+    </form>
 
     <form method="get" action="{{ url_for('logout') }}">
         <input type="hidden" name="logout">
