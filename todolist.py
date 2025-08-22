@@ -4,7 +4,11 @@ from flask_mysqldb import MySQL
 from flask_bcrypt import Bcrypt
 import secrets
 #import register form class from another page 
-from forms import RegisterForm,Loginform
+from forms import RegisterForm,Loginform,ForgotPasswordForm,ResetPasswordForm
+# jsonify
+from flask import jsonify
+from utils import generatResetTokens,varifyResetTokens
+
 
 # create app object
 app = Flask(__name__)
@@ -67,7 +71,7 @@ def login():
                 session['user_id'] = user[0]   # column 0 is id  -->  [id, username,password]
                 return redirect(url_for('display_all'))
         
-    return render_template('login.html',form=form)
+    return render_template('login.html',form=form, page='login')
 
 # Logout
 @app.route('/logout')
@@ -91,6 +95,64 @@ def display_all():
     cursor.close()
 
     return render_template('diplay_data.html', mydata=all_data,)
+
+
+# Forgot password
+@app.route('/forgotPassword',methods=['GET','POST'])
+def forgotPassword():
+    form =ForgotPasswordForm()
+    # get email data
+    if form.validate_on_submit():
+        email = form.email.data
+
+        # check in DB if email exists
+        cursor = mysql.connection.cursor()
+        cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
+        user = cursor.fetchone()
+        cursor.close()
+
+        if user:
+            token =generatResetTokens(email)
+            reset_url = url_for('resetPassword', token=token, _external=True)
+            print("Reset Link --> ", reset_url)
+            flash('Reset link sent to your email!','info')
+        else:
+            flash('Email not found', 'danger')
+            return redirect(url_for('forgotPassword'))
+        
+        return render_template('login.html', form=form, page='forgotPassword')
+    return render_template("login.html", form=form, page="forgotPassword")
+
+@app.route('/resetPassword/<token>', methods=['GET', 'POST'])
+def resetPassword(token):
+    form = ResetPasswordForm()
+    email = varifyResetTokens(token)
+
+    if not email:
+        flash('Invalid or expired token',"danger")
+        return redirect(url_for('forgotPassword'))
+    
+    if form.validate_on_submit():
+        new_password = form.new_password.data
+
+        # hash it before using
+        hashed_password = bcrypt.generate_password_hash(new_password).decode('utf-8')
+
+        # db
+        cursor = mysql.connection.cursor()
+        cursor.execute(
+            'UPDATE users SET password = %s WHERE email=%s', (hashed_password,email)
+        )
+        mysql.connection.commit()
+        cursor.close()
+
+        flash('Password has been reset. Please login','success')
+        return redirect(url_for('login'))
+    
+    return render_template("login.html", form=form, page="resetPassword", token=token)
+
+
+
 
 @app.route('/task_to_add', methods=['POST'])
 def task_to_add():
@@ -166,6 +228,7 @@ def update(id):
     cursor.close()
     
     return redirect(url_for('display_all'))
+
 # ---------------- RUN ----------------
 
 if __name__ == '__main__':

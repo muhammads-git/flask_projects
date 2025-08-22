@@ -1,41 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
     <title>Login</title>
 </head>
 <body>
 <center>
 
-    <form method="POST" action="{{ url_for('login') }}">
-    {{ form.hidden_tag() }}
+    <!-- LOGIN FORM -->
+    {% if page == 'login' %}
+        <form method="POST" action="{{ url_for('login') }}">
+            {{ form.hidden_tag() }}
+            <p>
+                {{ form.username.label }} <br>
+                {{ form.username(size=20, placeholder="Enter the username") }}
+                {% for error in form.username.errors %}
+                    <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </p>
+
+            <p>
+                {{ form.password.label }} <br>
+                {{ form.password(size=20, placeholder="Enter the password") }}
+                {% for error in form.password.errors %}
+                    <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </p>
+
+            <p>{{ form.submit }}</p>
+        </form>
+
+        <!-- Extra links (only on login page) -->
         <p>
-            {{ form.username.label }} <br>
-            {{ form.username(size=20, placeholder="Enter the username")}}
-            {% for error in form.username.errors %}
-                <span style="color: red;">{{ error }}</span>
-            {% endfor %}
+            <a href="{{ url_for('forgotPassword') }}">Forgot Password?</a>
         </p>
 
-        <p>
-            {{ form.password.label }} <br>
-            {{form.password(size=20, placeholder="Enter the password")}}
-            {% for error in form.username.errors %}
-                <span style="color: red;">{{ error }}</span>
-            {% endfor %}
-        </p>
+        <!-- LOGOUT FORM -->
+        <form method="get" action="{{ url_for('logout') }}">
+            <button type="submit">Logout</button>
+        </form>
+    {% endif %}
 
 
-        <p>
-            {{ form.submit }}
-        </p>
+    <!-- FORGOT PASSWORD FORM -->
+    {% if page == 'forgotPassword' %}
+        <h2>Forgot password</h2>
+        <form method="POST" action="{{ url_for('forgotPassword') }}">
+            {{ form.hidden_tag() }}
+            <p> 
+                {{ form.email.label }} <br>
+                {{ form.email(size=30, placeholder="Enter your email") }}
+                {% for error in form.email.errors %}
+                    <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </p>
+            <p>{{ form.submit() }}</p>
+        </form>
+    {% endif %}
 
-    </form>
 
-    <form method="get" action="{{ url_for('logout') }}">
-        <input type="hidden" name="logout">
-        <button type="submit">Logout</button>
-    </form>
+    <!-- RESET PASSWORD FORM -->
+    {% if page == 'resetPassword' %}
+        <h2>Reset Password</h2>
+        <form method="POST" action="{{ url_for('resetPassword', token=token) }}">
+            {{ form.hidden_tag() }}
+            <p>
+                {{ form.new_password.label }} <br>
+                {{ form.new_password(size=30, placeholder="New password") }}
+                {% for error in form.new_password.errors %}
+                    <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </p>
+            <p>
+                {{ form.confirm_password.label }} <br>
+                {{ form.confirm_password(size=30, placeholder="Confirm password") }}
+                {% for error in form.confirm_password.errors %}
+                    <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </p>
+            <p>{{ form.submit() }}</p>
+        </form>
+    {% endif %}
 
 </center>
 </body>
