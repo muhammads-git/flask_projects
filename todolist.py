@@ -5,9 +5,9 @@ from flask_bcrypt import Bcrypt
 import secrets
 #import register form class from another page 
 from forms import RegisterForm,Loginform,ForgotPasswordForm,ResetPasswordForm
-# jsonify
-from flask import jsonify
 from utils import generatResetTokens,varifyResetTokens
+# import Flask-Mail
+from flask_mail import Mail, Message
 
 
 # create app object
@@ -17,11 +17,20 @@ app.config['MYSQL_HOST']='localhost'
 app.config['MYSQL_USER']='muhammad'
 app.config['MYSQL_PASSWORD']='Shahzib123!'
 app.config['MYSQL_DB']='todo'
+app.config['SECRET_KEY'] ='supersecretkeybro'
 mysql = MySQL(app)
+# Bcrypt object for hash pass
 bcrypt = Bcrypt(app)
 
-# secret key for session
-app.secret_key = secrets.token_hex(16)
+# config email with flask
+app.config['MAIL_SERVER']='smtp.gmail.com'
+app.config['MAIL_PORT']=587
+app.config['MAIL_USE_TLS']=True
+app.config['MAIL_USERNAME']='sirhammad760@gmail.com'
+app.config['MAIL_PASSWORD']='bhka bodw ekhm fkvs '
+app.config['MAIL_DEFAULT_SENDER']='sirhammad760@gmail.com'
+# MAIL class obj
+mail = Mail(app)
 
 # ---------------- ROUTES ----------------
 
@@ -104,7 +113,6 @@ def forgotPassword():
     # get email data
     if form.validate_on_submit():
         email = form.email.data
-
         # check in DB if email exists
         cursor = mysql.connection.cursor()
         cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
@@ -112,15 +120,20 @@ def forgotPassword():
         cursor.close()
 
         if user:
-            token =generatResetTokens(email)
+            token = generatResetTokens(email)
             reset_url = url_for('resetPassword', token=token, _external=True)
-            print("Reset Link --> ", reset_url)
-            flash('Reset link sent to your email!','info')
+            # Sending Reset link via email...
+            msg = Message('Password reset link',recipients=[email])
+            msg.body = f'Click the link to reset your password: {reset_url}'
+            mail.send(msg)
+            
+            flash('A reset link has been sent to your Email!')
+            return redirect(url_for('login'))
+            
         else:
             flash('Email not found', 'danger')
             return redirect(url_for('forgotPassword'))
         
-        return render_template('login.html', form=form, page='forgotPassword')
     return render_template("login.html", form=form, page="forgotPassword")
 
 @app.route('/resetPassword/<token>', methods=['GET', 'POST'])
